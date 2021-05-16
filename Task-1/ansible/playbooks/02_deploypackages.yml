@@ -1,0 +1,46 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - ../defaults/main.yml
+
+  task:
+    - name: add the PosgreSQL repo
+      yum:
+        name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+    - name: Install dependencies for PostgreSQL
+      yum:
+        name:
+        update_cache: true
+        state: latest
+      with_items:
+        - bash
+        - openssl
+        - libssl-dev
+        - libssl-doc
+
+    - name: Install PostgreSQL
+      yum:
+        name: "{{ item }}" 
+        update_cache: true
+        state: present
+      with_items:        
+        - postgresql
+        - postgresql-contrib
+        - libpq-dev
+        - python-psycopg2
+
+    - name: Initialize the database
+      shell: /usr/pgsql-11/bin/postgresql-11-setup initdb
+
+    - name: PostgreSQL start and enable services
+      service: 
+        name: postgresql
+        state: started
+        enabled: yes
+    
+    - name: Restart services
+      service:
+        name: postgresql
+        state: restarted
