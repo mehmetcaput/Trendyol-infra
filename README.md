@@ -13,4 +13,7 @@ https://severalnines.com/database-blog/postgresql-deployment-and-maintenance-ans
 
 Task-2
 Ref:
+
 https://github.com/atosatto/ansible-minio
+
+https://github.com/husnusensoy/infra-bootcamp
