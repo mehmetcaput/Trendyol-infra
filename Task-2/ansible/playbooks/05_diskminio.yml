@@ -1,0 +1,96 @@
+
+sts: servers
+  become: yes
+  tasks:
+    
+    - name: Grab pvs
+      shell: lsscsi |grep "VMware Virtual"|grep -v "0:0:0"|awk '{print $8}'
+      register: scsi_info
+    
+    
+    - name: Partition create 
+      parted:
+        device: "{{ item }}"
+        label: gpt
+        number: 1
+        state: present
+      with_items: "{{scsi_info.stdout_lines}}"
+      register: pvs_info
+
+
+    - name: Volume create
+      lvg:
+        vg: vg_objectstorage
+        pvs: /dev/sdb1
+        state: present
+     
+    - name: Create logic
+      lvol:
+        vg: vg_objectstorage
+        lv: " {{ item.name }}"
+        size: "{{ item.size }}" 
+      with_items:
+        - name: 001_lv
+          size: 600
+        - name: 002_lv
+          size: 600
+        - name: 003_lv
+          size: 600
+        - name: 004_lv
+          size: 600
+        - name: 005_lv
+          size: 600
+        - name: 006_lv
+          size: 600
+        - name: 007_lv
+          size: 600
+        - name: 008_lv
+          size: 600
+
+      ignore_errors: True
+
+    - name:  xfs file system
+      filesystem:
+        fstype: xfs
+        dev: "/dev/mapper/vg_objectstorage-{{ item }}"
+      with_items:
+        - 001_lv
+        - 002_lv
+        - 003_lv
+        - 004_lv
+        - 005_lv
+        - 006_lv 
+        - 007_lv
+        - 008_lv
+      ignore_errors: True
+      
+    - name: Mount file system
+      mount:
+        fstype: xfs
+        path: "/mnt/disks/{{ item.dst_path }}"
+        src: "/dev/mapper/vg_objectstorage-{{ item.src_path }}"
+        opts: noatime
+        state: mounted
+      with_items:
+        - dst_path: data1 
+          src_path: 001_lv
+        - dst_path: data2
+          src_path: 002_lv
+        - dst_path: data3
+          src_path: 003_lv
+        - dst_path: data4
+          src_path: 004_lv
+        - dst_path: data5
+          src_path: 005_lv
+        - dst_path: data6
+          src_path: 006_lv
+        - dst_path: data7
+          src_path: 007_lv
+        - dst_path: data8
+          src_path: 008_lv
+      ignore_errors: True
+	 
+	- name: Rebooting...
+      reboot:
+
+    - shell: df -kh

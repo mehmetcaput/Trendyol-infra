@@ -1,0 +1,11 @@
+me: Apply common configuration to "all" hosts
+  hosts: all
+  remote_user: root
+  roles:
+    - common
+
+- name: Apply web configuration to "servers" hosts
+  hosts: servers
+  remote_user: root
+  roles:
+    - web
